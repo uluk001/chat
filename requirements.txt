@@ -1,0 +1,4 @@
+channels
+Django
+django-channels
+uvicorn

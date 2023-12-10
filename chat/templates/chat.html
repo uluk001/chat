@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Themed Chat Interface</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #121212;
+    color: white;
+    margin: 0;
+    padding: 20px;
+  }
+  .chat-container {
+    max-width: 768px;
+    margin: auto;
+    background-color: transparent; /* Make the chat background slightly transparent if desired */
+    padding: 20px;
+  }
+  .message {
+    margin-bottom: 15px;
+  }
+  .message-sent {
+    text-align: right;
+  }
+  .message-content {
+    display: inline-block;
+    max-width: 60%;
+    padding: 10px;
+    border-radius: 15px;
+    background-color: #263238; /* Dark message bubble color */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .message-content a {
+    color: #4fc3f7; /* Link color */
+    text-decoration: none;
+  }
+  .message-timestamp {
+    display: block;
+    color: #607d8b; /* Timestamp color */
+    font-size: 0.75rem;
+    margin-top: 5px;
+  }
+  .input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background: #222;
+  }
+  .input-area input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    margin: 10px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-container" id="chat-log">
+  <!-- Сообщения будут добавляться сюда динамически через JavaScript -->
+</div>
+
+<div class="input-area">
+  <input type="text" id="chat-message-input" placeholder="Write a message...">
+  <button id="chat-message-submit">Send</button>
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  const chatLog = document.querySelector('#chat-log');
+  const messageInput = document.querySelector('#chat-message-input');
+  const messageSubmitButton = document.querySelector('#chat-message-submit');
+
+  var chat_id = 1;
+  const roomGroup = chat_id;
+  const chatSocket = new WebSocket(
+    (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + roomGroup + '/'
+  );
+
+  chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (!chatLog.querySelector(`[data-message-id="${data.id}"]`)) {
+      const messageElement = document.createElement('div');
+      messageElement.className = 'message ' + (data.sender === '{{ user.username }}' ? 'message-sent' : '');
+      messageElement.setAttribute('data-message-id', data.id);
+      messageElement.innerHTML = `
+        <div class="message-content">
+          <span>${data.content}</span>
+          <span class="message-timestamp">${data.timestamp || 'Just now'}</span>
+        </div>`;
+      chatLog.appendChild(messageElement);
+    }
+  };
+
+  chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+  };
+
+  messageSubmitButton.onclick = function(e) {
+    e.preventDefault();
+    const message = messageInput.value;
+    const messageId = generateMessageId(); // Генерируем уникальный ID для сообщения
+
+    chatSocket.send(JSON.stringify({
+      'content': message,
+      'id': messageId
+    }));
+
+    // Добавляем сообщение в DOM сразу после отправки
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message message-sent';
+    messageElement.setAttribute('data-message-id', messageId);
+    messageElement.innerHTML = `
+      <div class="message-content">
+        <span>${message}</span>
+        <span class="message-timestamp">Just now</span>
+      </div>`;
+    chatLog.appendChild(messageElement);
+
+    messageInput.value = '';
+  };
+});
+
+function generateMessageId() {
+  // Генерация уникального идентификатора для сообщения
+  return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+  
+</script>
+
+</body>
+</html>

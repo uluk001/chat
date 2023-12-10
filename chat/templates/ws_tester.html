@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+            
+            var ws = new WebSocket("ws://localhost:8000");
+    
+            ws.onopen = function() {
+                console.log("Соединение установлено.");
+            };
+    
+            ws.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log('Соединение закрыто чисто');
+                } else {
+                    console.log('Обрыв соединения'); // например, "убит" процесс сервера
+                }
+                console.log('Код: ' + event.code + ' причина: ' + event.reason);
+            };
+    
+            ws.onmessage = function(event) {
+                console.log("Получены данные " + event.data);
+            };
+    
+            ws.onerror = function(error) {
+                console.log("Ошибка " + error.message);
+            };
+    
+            function send() {
+                var message = document.getElementById('message').value;
+                ws.send(message);
+            }
+    </script>
+</head>
+<body>
+
+</body>
+</html>
