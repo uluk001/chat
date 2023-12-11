@@ -62,7 +62,7 @@
 <body>
 
 <div class="chat-container" id="chat-log">
-  <!-- Сообщения будут добавляться сюда динамически через JavaScript -->
+
 </div>
 
 <div class="input-area">
@@ -72,68 +72,53 @@
 
 <script>
 
-document.addEventListener('DOMContentLoaded', function() {
-  const chatLog = document.querySelector('#chat-log');
-  const messageInput = document.querySelector('#chat-message-input');
-  const messageSubmitButton = document.querySelector('#chat-message-submit');
-
-  var chat_id = 1;
-  const roomGroup = chat_id;
-  const chatSocket = new WebSocket(
-    (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + roomGroup + '/'
-  );
-
-  chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-    if (!chatLog.querySelector(`[data-message-id="${data.id}"]`)) {
-      const messageElement = document.createElement('div');
-      messageElement.className = 'message ' + (data.sender === '{{ user.username }}' ? 'message-sent' : '');
-      messageElement.setAttribute('data-message-id', data.id);
-      messageElement.innerHTML = `
-        <div class="message-content">
-          <span>${data.content}</span>
-          <span class="message-timestamp">${data.timestamp || 'Just now'}</span>
-        </div>`;
-      chatLog.appendChild(messageElement);
-    }
-  };
-
-  chatSocket.onclose = function(e) {
-    console.error('Chat socket closed unexpectedly');
-  };
-
-  messageSubmitButton.onclick = function(e) {
-    e.preventDefault();
-    const message = messageInput.value;
-    const messageId = generateMessageId(); // Генерируем уникальный ID для сообщения
-
-    chatSocket.send(JSON.stringify({
-      'content': message,
-      'id': messageId
-    }));
-
-    // Добавляем сообщение в DOM сразу после отправки
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message message-sent';
-    messageElement.setAttribute('data-message-id', messageId);
-    messageElement.innerHTML = `
-      <div class="message-content">
-        <span>${message}</span>
-        <span class="message-timestamp">Just now</span>
-      </div>`;
-    chatLog.appendChild(messageElement);
-
-    messageInput.value = '';
-  };
-});
-
-function generateMessageId() {
-  // Генерация уникального идентификатора для сообщения
-  return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
+  document.addEventListener('DOMContentLoaded', function() {
+    const chatLog = document.querySelector('#chat-log');
+    const messageInput = document.querySelector('#chat-message-input');
+    const messageSubmitButton = document.querySelector('#chat-message-submit');
   
-</script>
+    const current_url = window.location.href;
+    var chat_id = current_url.split('/')[4];
+    const roomGroup = chat_id;
+    const chatSocket = new WebSocket(
+      (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + roomGroup + '/'
+    );
+  
+
+    chatSocket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      // Убеждаемся, что это сообщение не было уже добавлено в DOM
+      if (!chatLog.querySelector(`[data-message-id="${data.message_id}"]`)) {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message ' + (data.sender === '{{ user.username }}' ? 'message-sent' : '');
+        messageElement.setAttribute('data-message-id', data.message_id);
+        messageElement.innerHTML = `
+          <div class="message-content">
+            <span>${data.content}</span>
+            <span class="message-timestamp">${data.timestamp || 'Just now'}</span>
+          </div>`;
+        chatLog.appendChild(messageElement);
+      }
+    };
+  
+  
+    chatSocket.onclose = function(e) {
+      console.error('Chat socket closed unexpectedly');
+    };
+  
+    messageSubmitButton.onclick = function(e) {
+      e.preventDefault();
+      const message = messageInput.value;
+      chatSocket.send(JSON.stringify({ 'content': message }));
+      messageInput.value = '';
+  };
+  
+      // Уберите локальное добавление сообщения
+  
+  });
+
+  </script>
+  
 
 </body>
 </html>
