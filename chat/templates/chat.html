@@ -62,7 +62,7 @@
 <body>
 
 <div class="chat-container" id="chat-log">
-
+  <!-- Сообщения будут добавляться сюда динамически через JavaScript -->
 </div>
 
 <div class="input-area">
@@ -100,7 +100,6 @@
         chatLog.appendChild(messageElement);
       }
     };
-  
   
     chatSocket.onclose = function(e) {
       console.error('Chat socket closed unexpectedly');

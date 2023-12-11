@@ -73,7 +73,7 @@
         {% if chat.buyer == user %}
         <div class="message-name"><a href="{% url 'chat' chat.id %}">{{chat.seller}}</a></div>
         {% else %}
-        <div class="message-name">{{chat.buyer}}</div>
+        <div class="message-name"><a href="{% url 'chat' chat.id %}">{{chat.buyer}}</a></div>
         {% endif %}
         <div class="message-content">{{chat.messages}}</div>
       </div>
